@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     envDir: monorepoRoot,
+    base: '/ai-prompt/',
     plugins: [vue()],
     server: {
       port: 18181,
