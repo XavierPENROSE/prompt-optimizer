@@ -2,7 +2,7 @@
   "name": "prompt-optimizer",
   "compatibility_date": "2026-05-27",
   "build": {
-    "command": "pnpm -F @prompt-optimizer/core build && pnpm -F @prompt-optimizer/ui build && pnpm -F @prompt-optimizer/web build"
+    "command": "pnpm -F @prompt-optimizer/core build && pnpm -F @prompt-optimizer/ui build && pnpm -F @prompt-optimizer/web build && mkdir -p packages/web/dist/ai-prompt && cp -r packages/web/dist/assets packages/web/dist/ai-prompt/ && cp packages/web/dist/index.html packages/web/dist/config.js packages/web/dist/favicon.ico packages/web/dist/ai-prompt/"
   },
   "assets": {
     "directory": "packages/web/dist",
