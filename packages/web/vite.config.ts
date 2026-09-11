@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    base: '/ai-prompt/',
     envDir: monorepoRoot,
     plugins: [vue()],
     server: {
