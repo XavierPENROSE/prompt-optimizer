@@ -499,7 +499,160 @@ export default {
         );
       }
     }
+/*
+ * Groq API.
+ */
+if (url.pathname.startsWith(GROQ_API_PREFIX + "/")) {
 
+  /*
+   * CORS preflight must be allowed.
+   * The actual POST request is still authenticated below.
+   */
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders(origin),
+    });
+  }
+
+  /*
+   * Require authentication for every actual API request.
+   */
+  if (!(await isAuthenticated(request, env))) {
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: "Authentication required",
+        },
+      }),
+      {
+        status: 401,
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+          ...Object.fromEntries(corsHeaders(origin)),
+        },
+      }
+    );
+  }
+
+  /*
+   * Only POST is allowed.
+   */
+  if (request.method !== "POST") {
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: "Method Not Allowed",
+        },
+      }),
+      {
+        status: 405,
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+          ...Object.fromEntries(corsHeaders(origin)),
+        },
+      }
+    );
+  }
+
+  /*
+   * Relay token must exist in Worker Secret.
+   */
+  if (!env.RELAY_TOKEN) {
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: "RELAY_TOKEN is not configured",
+        },
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+          ...Object.fromEntries(corsHeaders(origin)),
+        },
+      }
+    );
+  }
+
+  /*
+   * /ai-prompt/api/groq/
+   *        ↓
+   * /groq-relay/
+   */
+  const relayPath = url.pathname.slice(GROQ_API_PREFIX.length);
+
+  const upstreamUrl =
+    GEMINI_RELAY_ORIGIN +
+    "/groq-relay" +
+    relayPath +
+    url.search;
+
+  /*
+   * Copy the request headers, but deliberately remove
+   * browser/API credentials.
+   */
+  const headers = new Headers(request.headers);
+
+  headers.delete("host");
+  headers.delete("content-length");
+
+  /*
+   * The browser must NOT be able to provide an API key,
+   * Authorization header, or relay token.
+   */
+  headers.delete("authorization");
+  headers.delete("x-relay-token");
+  headers.delete("x-api-key");
+
+  /*
+   * Worker injects the real relay authentication.
+   */
+  headers.set("X-Relay-Token", env.RELAY_TOKEN);
+
+  try {
+    const upstreamResponse = await fetch(upstreamUrl, {
+      method: "POST",
+      headers,
+      body: request.body,
+    });
+
+    /*
+     * Pass Groq's response back to the browser.
+     */
+    const responseHeaders = new Headers(upstreamResponse.headers);
+
+    responseHeaders.delete("content-length");
+
+    const cors = corsHeaders(origin);
+
+    for (const [key, value] of cors.entries()) {
+      responseHeaders.set(key, value);
+    }
+
+    return new Response(upstreamResponse.body, {
+      status: upstreamResponse.status,
+      statusText: upstreamResponse.statusText,
+      headers: responseHeaders,
+    });
+
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: "Groq relay request failed",
+        },
+      }),
+      {
+        status: 502,
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+          ...Object.fromEntries(corsHeaders(origin)),
+        },
+      }
+    );
+  }
+}
     /*
      * Other files under /ai-prompt/ require authentication.
      */
