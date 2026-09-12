@@ -1,5 +1,6 @@
 const GEMINI_RELAY_ORIGIN = "https://www.thenexus.kdns.fr";
 const API_PREFIX = "/ai-prompt/api/gemini";
+const GROQ_API_PREFIX = "/ai-prompt/api/groq";
 const APP_PREFIX = "/ai-prompt";
 const ALLOWED_ORIGIN = "https://www.primecare.cloudns.org";
 
