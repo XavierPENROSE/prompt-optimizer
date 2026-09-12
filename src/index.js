@@ -17,7 +17,7 @@ function corsHeaders(origin) {
   headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, X-Goog-Api-Key, Authorization"
+    "Content-Type, X-Goog-Api-Key, Authorization, X-Api-Key"
   );
   headers.set("Access-Control-Expose-Headers", "Content-Type");
 
